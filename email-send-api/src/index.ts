@@ -2,6 +2,9 @@
 import http from 'http';
 import { config } from 'dotenv';
 
+/* ------------- Utils --------------- */
+import { ApiError } from '@/utils/ApiError';
+
 /* ------------- Handlers --------------- */
 import { sendMailPOSTHandler } from '@/routes/send-email/POST';
 
@@ -24,7 +27,6 @@ server.on('request', async (request, response) => {
   let rawBody = '';
 
   request.on('data', (chunk) => {
-    console.log(chunk);
     rawBody += chunk;
   });
 
@@ -33,27 +35,32 @@ server.on('request', async (request, response) => {
 
     try {
       body = JSON.parse(rawBody);
-    } catch (error) {
-      console.error(error);
 
-      response.statusCode = 406;
+      const simplifiedRequest = {
+        url: request.url || '',
+        method: request.method || '',
+        headers: request.headers,
+        body,
+      }
+
+      sendMailPOSTHandler(simplifiedRequest, response);
+    } catch (error) {
+      console.error(`Error at ${request.method} ${request.url}: `, error);
+
+      if (error instanceof Error && error.message.includes('is not valid JSON')) {
+        response.statusCode = 406;
+        return response.end();
+      }
+
+      if (error instanceof ApiError) {
+        response.statusCode = error.status;
+        response.write(error.toJSON());
+        return response.end();
+      }
+
       return response.end();
     }
-
-    const simplifiedRequest = {
-      url: request.url || '',
-      method: request.method || '',
-      headers: request.headers,
-      body,
-    }
-
-    sendMailPOSTHandler(simplifiedRequest, response);
   });
-
-
-
-
-  response.end();
 });
 
 server.listen(port, () => {
