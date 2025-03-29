@@ -9,6 +9,7 @@ import { SimpleRequest } from '@/types';
 
 /* ------------- Utils ---------------- */
 import { ApiError } from '@/utils/ApiError';
+import { logger } from '@/utils/logger';
 
 const attachmentShape = z.object({
   content: z.any().optional(),
@@ -32,7 +33,7 @@ const bodyShape = z.object({
   attachments: z.array(attachmentShape).optional()
 }).refine((data) => data.html || data.plainText, "Either 'html' or 'plainText' must be specified");
 
-export const sendMailPOSTHandler = (request: SimpleRequest, response: ServerResponse<IncomingMessage>) => {
+export const sendMailPOSTHandler = (request: SimpleRequest) => {
   try {
     const body = bodyShape.parse(request.body);
     let { html, plainText, attachDataUrls, cc, bcc, attachments } = body;
@@ -60,6 +61,15 @@ export const sendMailPOSTHandler = (request: SimpleRequest, response: ServerResp
       },
     });
 
+    logger.info('Sending email', {
+      from: process.env.SMTP_USER,
+      to: body.to,
+      subject: body.subject,
+      attachments: attachments?.length || 0,
+      cc,
+      bcc,
+    })
+
     transporter.sendMail({
       from: process.env.SMTP_USER,
       to: body.to,
@@ -71,6 +81,8 @@ export const sendMailPOSTHandler = (request: SimpleRequest, response: ServerResp
       cc,
       attachments,
     });
+
+    logger.info('Email sent');
   } catch (error) {
     throw ApiError.fromError(error);
   }

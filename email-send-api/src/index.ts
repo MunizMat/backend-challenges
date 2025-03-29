@@ -4,6 +4,7 @@ import { config } from 'dotenv';
 
 /* ------------- Utils --------------- */
 import { ApiError } from '@/utils/ApiError';
+import { logger } from '@/utils/logger';
 
 /* ------------- Handlers --------------- */
 import { sendMailPOSTHandler } from '@/routes/send-email/POST';
@@ -34,6 +35,12 @@ server.on('request', async (request, response) => {
     let body = {};
 
     try {
+      logger.info('Received request', {
+        userAgent: request.headers['user-agent'],
+        host: request.headers.host,
+        origin: request.headers.origin
+      });
+
       body = JSON.parse(rawBody);
 
       const simplifiedRequest = {
@@ -43,12 +50,12 @@ server.on('request', async (request, response) => {
         body,
       }
 
-      sendMailPOSTHandler(simplifiedRequest, response);
+      sendMailPOSTHandler(simplifiedRequest);
 
       response.statusCode = 200;
       response.end(JSON.stringify({ message: 'Email sent' }, null, 2));
     } catch (error) {
-      console.error(`Error at ${request.method} ${request.url}: `, error);
+      logger.error(`Error at ${request.method} ${request.url}: `, error);
 
       if (error instanceof SyntaxError && error.message.includes('JSON')) {
         response.statusCode = 406;
@@ -67,6 +74,6 @@ server.on('request', async (request, response) => {
 });
 
 server.listen(port, () => {
-  console.log(`Server up and running on port ${port}`);
-  console.log(`http://localhost:${port}`);
+  logger.info(`Server up and running on port ${port}`);
+  logger.info(`http://localhost:${port}`);
 })
