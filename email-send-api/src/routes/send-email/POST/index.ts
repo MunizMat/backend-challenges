@@ -10,6 +10,15 @@ import { SimpleRequest } from '@/types';
 /* ------------- Utils ---------------- */
 import { ApiError } from '@/utils/ApiError';
 
+const attachmentShape = z.object({
+  content: z.any().optional(),
+  contentDisposition: z.enum(["attachment", "inline"]).optional(),
+  contentType: z.string().optional(),
+  filename: z.string().optional(),
+  path: z.string().optional(),
+  encoding: z.string().optional()
+});
+
 const bodyShape = z.object({
   subject: z.string().nonempty(),
   to: z.array(z.string().nonempty()
@@ -17,13 +26,16 @@ const bodyShape = z.object({
   variables: z.record(z.string()).optional().nullable(),
   html: z.string().nonempty().optional(),
   plainText: z.string().nonempty().optional(),
-  attachDataUrls: z.boolean().optional()
+  attachDataUrls: z.boolean().optional(),
+  cc: z.array(z.string()).optional(),
+  bcc: z.array(z.string()).optional(),
+  attachments: z.array(attachmentShape).optional()
 }).refine((data) => data.html || data.plainText, "Either 'html' or 'plainText' must be specified");
 
 export const sendMailPOSTHandler = (request: SimpleRequest, response: ServerResponse<IncomingMessage>) => {
   try {
     const body = bodyShape.parse(request.body);
-    let { html, plainText, attachDataUrls } = body;
+    let { html, plainText, attachDataUrls, cc, bcc, attachments } = body;
 
     if (body.variables && html) {
       const htmlTemplate = Handlebars.compile(html);
@@ -34,7 +46,6 @@ export const sendMailPOSTHandler = (request: SimpleRequest, response: ServerResp
       const plainTextTemplate = Handlebars.compile(plainText);
       plainText = plainTextTemplate(body.variables);
     }
-
 
     const transporter = createTransport({
       service: 'gmail',
@@ -55,7 +66,10 @@ export const sendMailPOSTHandler = (request: SimpleRequest, response: ServerResp
       subject: body.subject,
       text: plainText,
       html,
-      attachDataUrls
+      attachDataUrls,
+      bcc,
+      cc,
+      attachments,
     });
   } catch (error) {
     throw ApiError.fromError(error);

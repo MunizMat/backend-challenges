@@ -44,10 +44,13 @@ server.on('request', async (request, response) => {
       }
 
       sendMailPOSTHandler(simplifiedRequest, response);
+
+      response.statusCode = 200;
+      response.end(JSON.stringify({ message: 'Email sent' }, null, 2));
     } catch (error) {
       console.error(`Error at ${request.method} ${request.url}: `, error);
 
-      if (error instanceof Error && error.message.includes('is not valid JSON')) {
+      if (error instanceof SyntaxError && error.message.includes('JSON')) {
         response.statusCode = 406;
         return response.end();
       }
