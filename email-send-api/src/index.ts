@@ -1,8 +1,9 @@
+/* ------------- External --------------- */
 import http from 'http';
-import { createTransport } from 'nodemailer';
 import { config } from 'dotenv';
-import { z } from 'zod';
-import { sendMailPOSTHandler } from './routes/send-email/POST';
+
+/* ------------- Handlers --------------- */
+import { sendMailPOSTHandler } from '@/routes/send-email/POST';
 
 const server = http.createServer();
 const port = process.env.PORT || 3000;

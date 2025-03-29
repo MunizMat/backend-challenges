@@ -1,8 +1,11 @@
+/* ------------- External ---------------- */
 import z from 'zod';
-import { SimpleRequest } from '../../../@types';
+import Handlebars from 'handlebars';
 import { IncomingMessage, ServerResponse } from 'http';
 import { createTransport } from 'nodemailer';
-import Handlebars from 'handlebars';
+
+/* ------------- Types ---------------- */
+import { SimpleRequest } from '@/types';
 
 const bodyShape = z.object({
   subject: z.string().nonempty(),
