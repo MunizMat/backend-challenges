@@ -14,9 +14,11 @@ import { RequestHandler } from '@/types';
 import { json } from '@/utils/json';
 import { isAuthorized } from '@/utils/isAuthorized';
 import { measureOperationTime } from '@/utils/measureOperationTime';
+import { rateLimit } from '@/utils/rateLimit';
 
 /* ------------- Clients --------------- */
 import { mongo } from '@/clients/mongodb';
+import { redis } from '@/clients/redis';
 
 /* ------------- Handlers --------------- */
 import { sendMailPOSTHandler } from '@/routes/send-email/POST';
@@ -68,31 +70,39 @@ server.on('request', async (request, response) => {
     rawBody += chunk;
   });
 
-  const methodsAvailable = requestMapping[request.url || ''];
-
-  if (!methodsAvailable) {
-    response.statusCode = 404;
-    return response.end(json({ message: 'Resource does not exist' }));
-  }
-
-  const method = methodsAvailable.find(({ method }) => method === request.method);
-
-  if (!method) {
-    response.statusCode = 405;
-    return response.end(json({ message: 'Invalid method for the requested resource' }));
-  }
-
-  if (method.protected) {
-    const isAuth = isAuthorized(request);
-
-    if (!isAuth) {
-      response.statusCode = 401;
-      return response.end(json({ message: 'Unauthorized' }));
-    }
-  }
 
   request.on('end', async () => {
     let body = {};
+
+    const methodsAvailable = requestMapping[request.url || ''];
+
+    if (!methodsAvailable) {
+      response.statusCode = 404;
+      return response.end(json({ message: 'Resource does not exist' }));
+    }
+
+    const method = methodsAvailable.find(({ method }) => method === request.method);
+
+    if (!method) {
+      response.statusCode = 405;
+      return response.end(json({ message: 'Invalid method for the requested resource' }));
+    }
+
+    if (method.protected) {
+      const { isAuth, token } = isAuthorized(request);
+
+      if (!isAuth) {
+        response.statusCode = 401;
+        return response.end(json({ message: 'Unauthorized' }));
+      }
+
+      const { isRateLimited } = await rateLimit(token);
+
+      if (isRateLimited) {
+        response.statusCode = 429;
+        return response.end(json({ message: 'Too many requests' }));
+      }
+    }
 
     try {
       if (rawBody) body = JSON.parse(rawBody);
@@ -129,6 +139,7 @@ server.on('request', async (request, response) => {
 
 server.listen(port, async () => {
   await measureOperationTime(() => mongo.connect(), 'Connected to MongoDB');
+  await measureOperationTime(() => redis.connect(), 'Connected to Redis');
 
   logger.info(`Server up and running on port ${port}`);
   logger.info(`http://localhost:${port}\n---------------------\nAvailable Endpoints:`);
