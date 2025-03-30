@@ -1,15 +1,16 @@
 /* ------------- External ---------------- */
 import z from 'zod';
 import Handlebars from 'handlebars';
-import { IncomingMessage, ServerResponse } from 'http';
 import { createTransport } from 'nodemailer';
 
 /* ------------- Types ---------------- */
-import { SimpleRequest } from '@/types';
+import { RequestHandler } from '@/types';
 
 /* ------------- Utils ---------------- */
 import { ApiError } from '@/utils/ApiError';
 import { logger } from '@/utils/logger';
+import { json } from '@/utils/json';
+import { measureOperationTime } from '@/utils/measureOperationTime';
 
 const attachmentShape = z.object({
   content: z.any().optional(),
@@ -33,7 +34,7 @@ const bodyShape = z.object({
   attachments: z.array(attachmentShape).optional()
 }).refine((data) => data.html || data.plainText, "Either 'html' or 'plainText' must be specified");
 
-export const sendMailPOSTHandler = (request: SimpleRequest) => {
+export const sendMailPOSTHandler: RequestHandler = async (request, response) => {
   try {
     const body = bodyShape.parse(request.body);
     let { html, plainText, attachDataUrls, cc, bcc, attachments } = body;
@@ -68,9 +69,9 @@ export const sendMailPOSTHandler = (request: SimpleRequest) => {
       attachments: attachments?.length || 0,
       cc,
       bcc,
-    })
+    });
 
-    transporter.sendMail({
+    await measureOperationTime(() => transporter.sendMail({
       from: process.env.SMTP_USER,
       to: body.to,
       subject: body.subject,
@@ -80,9 +81,9 @@ export const sendMailPOSTHandler = (request: SimpleRequest) => {
       bcc,
       cc,
       attachments,
-    });
+    }), 'Sent email');
 
-    logger.info('Email sent');
+    response.write(json({ message: 'Email sent' }));
   } catch (error) {
     throw ApiError.fromError(error);
   }
