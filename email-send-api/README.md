@@ -1,43 +1,23 @@
 # Backend Challenge - Email Service API
+This folder contains the solution for the email service API challenge from [this link](https://github.com/boilerlabs/backend-challenges/blob/main/challenges/junior/service-email.md).
 
-## Introduction
+## Features
+- Basic authentication
+- Email sending with support for attachments and templated emails (plain text or HTML)
+- Proper error handling and input validation
+- Logging and monitoring
+- Rate limiting
 
-The "Email Service API" challenge is designed to build a REST API that allows users to send emails programmatically.
+## Implementation details & Decisions
+### Rate limiting
+I chose to implement the rate limiting logic on the API itself for learning purposes (in a production environment it would probably be on an API Gateway or proxy service) as a layer that comes after requests are authenticated. I built it using Redis since it provides fast data access and high performance. 
 
-### Objectives
+### REST API
+Rather than using express for setting up a Node.js REST API, I've created it using the "http" package from Node. Why? Because express is unecesary for a project with only 3 endpoints and becuase using the "http" package gives me a lower level view of what libraries such as express are actually built on top of.
 
-- Set up a web server capable of handling API requests.
-- Implement endpoints for sending emails with customizable content and recipients.
-- Handle email templates and attachments (optional).
-- Understand HTTP methods (POST) and status codes.
+## Improvements to make
+### Rate limiting
+Right now the rate limiting logic stores user authentication tokens in Redis in order to identify requests, but this is a security flaw since a breach of the Redis instance would allow someone to have access to a varierty if authentication tokens. An improvement to make would be to use IP addresses to identify the requests.
 
-### Instructions
-
-1. **Objective**: Develop a REST API that provides functionality for sending emails.
-
-2. **Environment Setup**: Choose your preferred programming language (e.g., JavaScript, Python, Java, C#) and set up the necessary environment.
-
-3. **Implementation Details**: 
-   - Define an endpoint (`POST /send-email`) to send emails:
-     - `POST /send-email`: Send an email with provided content (e.g., subject, body, recipients).
-   - Implement logic to interact with email sending service or library (e.g., SMTP server, third-party email API).
-   - Allow customization of email content such as subject, body (plain text or HTML), and recipients.
-   - Optionally, support email templates (e.g., handlebars templates) and attachments (e.g., PDFs, images).
-
-4. **Testing**: Test your API using a HTTP client (e.g., Postman, curl).
-   - Send POST requests to the `/send-email` endpoint with appropriate data payloads (e.g., JSON with subject, body, recipients).
-   - Verify that emails are sent successfully and handle error responses appropriately.
-
-### Possible Improvements
-
-- **Email Templates**: Implement support for predefined email templates to streamline email creation.
-- **Attachment Handling**: Enhance functionality to support attachments such as files or images.
-- **Authentication**: Secure API endpoints, especially those involving email sending capabilities.
-- **Logging**: Implement logging to track email sending activities for debugging and analytics.
-- **Rate Limiting**: Implement rate limiting to prevent abuse and manage email sending limits.
-
-## Conclusion
-
-By completing this challenge, you will gain practical experience in developing an Email Service API and learn essential practices for backend development related to email communication. Explore additional improvements and challenges to further enhance your skills.
-
-Happy coding!
+## Usage instructions
+This API hasn't been deplyed to a live environment, but you can run it locally by adding the required environment variabled specified at ```.env.example``` and running ```yarn dev```
