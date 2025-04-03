@@ -1,0 +1,3 @@
+[submodule "ci-build-pipeline"]
+	path = ci-build-pipeline
+	url = https://github.com/MunizMat/ci-build-pipeline.git
