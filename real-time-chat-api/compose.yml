@@ -1,0 +1,14 @@
+version: '3.8' 
+
+services:
+  cassandra:
+    image: cassandra:4.1 
+    container_name: chat-api-cassandra
+    ports:
+      - "9042:9042"
+    volumes:
+      - cassandra-data:/var/lib/cassandra
+
+volumes:
+  cassandra-data: 
+    driver: local 

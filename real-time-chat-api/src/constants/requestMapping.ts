@@ -1,6 +1,8 @@
 /* -------------- Types --------------- */
-import { registerPOSTHandler } from '@/routes/register/POST';
 import { RequestHandler } from '@/types';
+
+/* -------------- Routes --------------- */
+import { registerPOSTHandler } from '@/modules/users/routes/register/POST';
 
 interface RequestMapping {
   [key: string]: {
@@ -15,7 +17,6 @@ export const requestMapping: RequestMapping = {
     {
       method: 'POST',
       handler: registerPOSTHandler,
-      protected: true,
     },
   ],
 };

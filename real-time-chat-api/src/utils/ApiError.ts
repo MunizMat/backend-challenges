@@ -1,11 +1,12 @@
 /* --------------- External --------------- */
-import { ZodError } from "zod";
+import { ZodError } from 'zod';
 
 /* --------------- Utils --------------- */
-import { json } from "@/utils/json";
+import { json } from '@/utils/json';
 
 export class ApiError extends Error {
   readonly status: number;
+
   constructor(status: number, message: string) {
     super(message);
 
@@ -15,13 +16,12 @@ export class ApiError extends Error {
   toJSON() {
     return json({
       message: this.message,
-      status: this.status
+      status: this.status,
     });
   }
 
   static fromError(error: unknown) {
-    if (error instanceof ApiError)
-      return error;
+    if (error instanceof ApiError) return error;
 
     if (error instanceof ZodError) {
       const [issue] = error.issues;

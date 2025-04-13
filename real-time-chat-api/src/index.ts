@@ -7,6 +7,10 @@ import { ApiError } from '@/utils/ApiError';
 import { logger } from '@/utils/logger';
 import { json } from '@/utils/json';
 import { isAuthorized } from '@/utils/isAuthorized';
+import { measureOperationTime } from '@/utils/measureOperationTime';
+
+/* ------------- Clients --------------- */
+import { cassandraClient } from '@/clients/cassandra';
 
 /* ------------- Constants --------------- */
 import { requestMapping } from '@/constants/requestMapping';
@@ -95,6 +99,11 @@ server.on('request', async (request, response) => {
 });
 
 server.listen(port, async () => {
+  await measureOperationTime(
+    () => cassandraClient.connect(),
+    'Connected to CassandraDB',
+  );
+
   logger.info(`Server up and running on port ${port}`);
   logger.info(
     `http://localhost:${port}\n---------------------\nAvailable Endpoints:`,

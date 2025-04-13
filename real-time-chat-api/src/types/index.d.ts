@@ -1,4 +1,4 @@
-import { IncomingHttpHeaders, IncomingMessage, ServerResponse } from "http";
+import { IncomingHttpHeaders, IncomingMessage, ServerResponse } from 'http';
 
 export interface SimpleRequest {
   method: string;
@@ -7,12 +7,7 @@ export interface SimpleRequest {
   headers: IncomingHttpHeaders;
 }
 
-type RequestHandler = (request: SimpleRequest, response: ServerResponse<IncomingMessage>) => Promise<void>;
-
-interface User {
-  email: string;
-  password: string;
-  salt: string;
-  createdAt: string;
-  updatedAt: string;
-}
+type RequestHandler = (
+  request: SimpleRequest,
+  response: ServerResponse<IncomingMessage>,
+) => Promise<void>;
