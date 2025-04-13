@@ -9,6 +9,9 @@ import { cassandraClient } from '@/clients/cassandra';
 import { User } from '@/modules/users';
 import { RequestHandler } from '@/types';
 
+/* --------------- Repositories -------------- */
+import { userRepository } from '@/modules/users/repository';
+
 /* --------------- Schemas -------------- */
 import { createUserSchema } from '@/modules/users/schemas';
 
@@ -28,12 +31,9 @@ export const registerPOSTHandler: RequestHandler = async (
       password: rawPassword,
     } = createUserSchema.parse(request.body);
 
-    const { rows } = await cassandraClient.execute(
-      'SELECT id FROM users WHERE email = ?',
-      [email],
-    );
+    const existingUser = await userRepository.findByEmail(email);
 
-    if (rows.length > 0) throw new ApiError(400, 'This email is in use');
+    if (existingUser) throw new ApiError(400, 'This email is in use');
 
     const hashedPassword = await hash(rawPassword, 12);
     const now = new Date();

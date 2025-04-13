@@ -3,6 +3,7 @@ import { RequestHandler } from '@/types';
 
 /* -------------- Routes --------------- */
 import { registerPOSTHandler } from '@/modules/users/routes/register/POST';
+import { loginPOSTHandler } from '@/modules/authentication/routes/login/POST';
 
 interface RequestMapping {
   [key: string]: {
@@ -17,6 +18,12 @@ export const requestMapping: RequestMapping = {
     {
       method: 'POST',
       handler: registerPOSTHandler,
+    },
+  ],
+  '/login': [
+    {
+      method: 'POST',
+      handler: loginPOSTHandler,
     },
   ],
 };
